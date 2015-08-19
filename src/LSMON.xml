@@ -1,0 +1,4 @@
+<Command xmlns="http://xml.spss.com/extension" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="LSMON" Language="Python">
+  <Subcommand Name="HELP" Occurrence="Optional" /> 
+</Command>
