@@ -1,0 +1,15 @@
+Name: LSMON
+Dialog-Specs: LSMON.spd
+Command-Specs: LSMON.xml
+Code-Files: LSMON.py
+Summary: LSMON -  Monitor concurrent license usage
+Description: LSMON -  Monitor concurrent license usage (as returned by
+  lsmon.exe). Gives number and proportion of SPSS licenses used, by fe
+ ature and by reserved/unreserved license type. This assumes that the 
+ caller has a concurrent license, and that the LSHOST environment vari
+ able points to the license server
+Author: Albert-Jan Roskam
+Version: 1.0.2
+Product-Version: 18
+Date: 2014-05-21
+Plugins: Python
