@@ -1,4 +1,13 @@
-# -*- coding: UTF-8 -*-
+#/***********************************************************************
+# * Licensed Materials - Property of IBM 
+# *
+# * IBM SPSS Products: Statistics Common
+# *
+# * (C) Copyright IBM Corp. 1989, 2020
+# *
+# * US Government Users Restricted Rights - Use, duplication or disclosure
+# * restricted by GSA ADP Schedule Contract with IBM Corp. 
+# ************************************************************************/
 
 #********************************************************************************.
 #* Title/Objective: Output lsmon.exe license usage details in an SPSS pivot table.
@@ -70,18 +79,21 @@ def lsmon_():
     extension = ".exe" if sys.platform.startswith("win") else ""
     lsmon_exe = os.path.join(spssaux.GetSPSSInstallDir(), "lsmon%s" % extension)
     proc = subprocess.Popen(lsmon_exe, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    lines = proc.communicate()[0].split("\n")
+    lines = proc.communicate()[0].decode().split("\n")
     items = ["Feature name", "Maximum concurrent user", "reserved tokens in use", "Available reserved"]
     pattern = re.compile("("+ "|".join(items) + ")", re.I)
     tokens = [int(re.search('\d+', r).group(0)) for r in lines if 
                    pattern.search(r) and not r.startswith("     ")]
-    features = tokens[0::5]
-    maxes = tokens[1::5]
-    unreserveds = tokens[2::5]
-    reserveds = tokens[3::5]
-    available_reserveds = tokens[4::5]
-    total_reserveds = [used_res + avail_res for used_res, avail_res in zip(reserveds, available_reserveds)]
-    total_unreserveds = [max_ - total_res for max_, total_res in zip(maxes, total_reserveds)]
+                   
+    tempList = list(set(tokens[0::5]))
+    set_indexes = [tokens[0::5].index(x) for x in tempList]
+    features = [tokens[0::5][index] for index in set_indexes]
+    maxes = [tokens[1::5][index] for index in set_indexes]
+    unreserveds = [tokens[2::5][index] for index in set_indexes]
+    reserveds = [tokens[3::5][index] for index in set_indexes]
+    available_reserveds = [tokens[4::5][index] for index in set_indexes]
+    total_reserveds = [used_res + avail_res for used_res, avail_res in list(zip(reserveds, available_reserveds))]
+    total_unreserveds = [max_ - total_res for max_, total_res in list(zip(maxes, total_reserveds))]
     hostname = get_hostname(lines)
     return features, unreserveds, reserveds, maxes, total_reserveds, total_unreserveds, hostname
 
@@ -101,25 +113,25 @@ def lsmon():
 
         for feature in features:
             table.SetCategories(row, asStr(feature))
-        table.SetCellsByColumn(asStr("label"), map(asStr, feature_labels))
+        table.SetCellsByColumn(asStr("label"), list(map(asStr, feature_labels)))
 
-        table.SetCellsByColumn(asStr("unreserved\nn"), map(asInt, unreserveds))
+        table.SetCellsByColumn(asStr("unreserved\nn"), list(map(asInt, unreserveds)))
         percents = [unreserveds[i] / float(total_unres + 10e-10) * 100 for 
                     i, total_unres in enumerate(total_unreserveds)]
-        table.SetCellsByColumn(asStr("unreserved\n%"), map(asInt, percents, percentSpecs))
+        table.SetCellsByColumn(asStr("unreserved\n%"), list(map(asInt, percents, percentSpecs)))
 
-        table.SetCellsByColumn(asStr("reserved\nn"), map(asInt, reserveds))
+        table.SetCellsByColumn(asStr("reserved\nn"), list(map(asInt, reserveds)))
         percents = [reserveds[i] / float(total_res + 10e-10) * 100 for 
                     i, total_res in enumerate(total_reserveds)]
-        table.SetCellsByColumn(asStr("reserved\n%"), map(asInt, percents, percentSpecs))
+        table.SetCellsByColumn(asStr("reserved\n%"), list(map(asInt, percents, percentSpecs)))
 
-        totals = [unreserved + reserved for unreserved, reserved in zip(unreserveds, reserveds)]
-        table.SetCellsByColumn(asStr("total\nn"), map(asInt, totals))
+        totals = [unreserved + reserved for unreserved, reserved in list(zip(unreserveds, reserveds))]
+        table.SetCellsByColumn(asStr("total\nn"), list(map(asInt, totals)))
         percents = [(unreserveds[i] + reserveds[i]) / float(max_ + 10e-10) * 100 for 
                     i, max_ in enumerate(maxes)]
-        table.SetCellsByColumn(asStr("total\n%"), map(asInt, percents, percentSpecs))
+        table.SetCellsByColumn(asStr("total\n%"), list(map(asInt, percents, percentSpecs)))
 
-        table.SetCellsByColumn(asStr("maximum\nn"), map(asInt, maxes))
+        table.SetCellsByColumn(asStr("maximum\nn"), list(map(asInt, maxes)))
         table.Caption("License server: %s." % hostname)
     finally:
         spss.EndProcedure()
@@ -165,13 +177,13 @@ def Run(args):
     try:
         setUp()
 
-        args = args[args.keys()[0]]
+        args = args[list(args.keys())[0]]
         #print args   #debug
         oobj = Syntax([Template("HELP", subc="", ktype="bool")])
 
         # A HELP subcommand overrides all else
-        if args.has_key("HELP"):
-            print helptext
+        if "HELP" in args:
+            print(helptext)
         else:
             processcmd(oobj, args, lsmon)
         doFormat()
