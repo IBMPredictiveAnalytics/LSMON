@@ -1,4 +1,5 @@
 Name: LSMON
+Display-Name: License Monitor
 Dialog-Specs: LSMON.spd
 Command-Specs: LSMON.xml
 Code-Files: LSMON.py
